@@ -1110,7 +1110,7 @@ def section_coaches():
     st.subheader("Pregled i pretraga rezultata")
     fcol1, fcol2, fcol3, fcol4 = st.columns(4)
     f_kind = fcol1.text_input("Vrsta natjecanja (dio naziva)")
-    f_year = fcol2.text_input("Godina (npr. 2025)", key="res_year")
+    f_year = fcol2.text_input("Godina (npr. 2025)", key="comp_year", key="res_year")
     f_cat  = fcol3.text_input("Kategorija (dio naziva)")
     f_name = fcol4.text_input("Sportaš (dio imena)")
 
@@ -1212,61 +1212,85 @@ def section_coaches():
     st.download_button("Skini sve rezultate (Excel)",
                        data=excel_bytes_from_df(res_all, "Rezultati"),
                        file_name="rezultati.xlsx")
-# Pretraga i pregled natjecanja
+    # (Premješteno u section_competitions)
+    # Statistika za mjesec
     st.markdown("---")
-    st.subheader("Pregled i pretraga natjecanja")
-    colf = st.columns(5)
-    f_kind = colf[0].text_input("Vrsta (dio naziva)")
-    f_year = colf[1].text_input("Godina (npr. 2025)", key="comp_year")
-    f_age  = colf[2].text_input("Uzrast (dio naziva)")
-    f_style= colf[3].text_input("Stil (GR/FS/WW/BW/MOD)")
-    f_country = colf[4].text_input("Država (dio naziva)")
-    if st.button("Pretraži"):
-        q = """
-            SELECT id, name AS ime, kind AS vrsta, age_group AS uzrast, style AS stil,
-                   date_from AS od, date_to AS do, place AS mjesto, country AS država, country_code AS ISO3,
-                   team_rank AS ekipno, club_competitors AS naši, total_competitors AS natjecatelja,
-                   total_clubs AS klubova, total_countries AS zemalja
-            FROM competitions WHERE 1=1
-        """
-        params: List[str] = []
-        if f_kind.strip(): q += " AND kind LIKE ?"; params.append(f"%{f_kind}%")
-        if f_year.strip(): q += " AND date_from LIKE ?"; params.append(f"{f_year}%")
-        if f_age.strip():  q += " AND age_group LIKE ?"; params.append(f"%{f_age}%")
-        if f_style.strip():q += " AND style LIKE ?"; params.append(f"%{f_style}%")
-        if f_country.strip(): q += " AND country LIKE ?"; params.append(f"%{f_country}%")
-        q += " ORDER BY date_from DESC"
-        cdf = pd.read_sql_query(q, conn, params=params)
-    else:
-        cdf = pd.read_sql_query("""
-            SELECT id, name AS ime, kind AS vrsta, age_group AS uzrast, style AS stil,
-                   date_from AS od, date_to AS do, place AS mjesto, country AS država, country_code AS ISO3
-            FROM competitions ORDER BY date_from DESC
-        """, conn)
-
-    # formatiranje datuma i rednog broja
-    if 'od' in cdf.columns:
-        try:
-            cdf['od'] = pd.to_datetime(cdf['od']).dt.strftime('%d.%m.%Y.')
-        except Exception:
-            pass
-    if 'do' in cdf.columns:
-        try:
-            cdf['do'] = pd.to_datetime(cdf['do']).dt.strftime('%d.%m.%Y.')
-        except Exception:
-            pass
-    cdf.insert(0, 'R.br.', range(1, len(cdf)+1))
-    st.dataframe(cdf, use_container_width=True)
+    st.subheader("Statistika prisustva (mjesec)")
+    months = sorted(list(set([s[0][:7] for s in conn.execute("SELECT start_ts FROM sessions").fetchall() if s[0]])))
+    month = st.selectbox("Mjesec (YYYY-MM)", months if months else [])
+    if month:
+        s_count = conn.execute("SELECT COUNT(*), COALESCE(SUM((julianday(end_ts)-julianday(start_ts))*24*60),0) FROM sessions WHERE start_ts LIKE ?",
+                               (f"{month}%",)).fetchone()
+        st.write(f"- Broj treninga: **{int(s_count[0])}**")
+        st.write(f"- Ukupno minuta (treneri): **{int(s_count[1])}**")
+        a_count = conn.execute("SELECT COUNT(*), COALESCE(SUM(minutes),0) FROM attendance a JOIN sessions s ON s.id=a.session_id WHERE s.start_ts LIKE ?",
+                               (f"{month}%",)).fetchone()
+        st.write(f"- Prisustava (sportaši): **{int(a_count[0])}**")
+        st.write(f"- Ukupno minuta (sportaši): **{int(a_count[1])}**")
 
     conn.close()
 
 
 # ==========================
-# ODJELJAK: STATISTIKA
+# NAVIGACIJA I APLIKACIJA
 # ==========================
 
-# ODJELJAK: STATISTIKA
-# ==========================
+def section_competitions():
+    # Pretraga i pregled natjecanja
+        st.markdown("---")
+        st.subheader("Pregled i pretraga natjecanja")
+        colf = st.columns(5)
+        f_kind = colf[0].text_input("Vrsta (dio naziva)")
+        f_year = colf[1].text_input("Godina (npr. 2025)", key="comp_year")
+        f_age  = colf[2].text_input("Uzrast (dio naziva)")
+        f_style= colf[3].text_input("Stil (GR/FS/WW/BW/MOD)")
+        f_country = colf[4].text_input("Država (dio naziva)")
+        if st.button("Pretraži"):
+            q = """
+                SELECT id, name AS ime, kind AS vrsta, age_group AS uzrast, style AS stil,
+                       date_from AS od, date_to AS do, place AS mjesto, country AS država, country_code AS ISO3,
+                       team_rank AS ekipno, club_competitors AS naši, total_competitors AS natjecatelja,
+                       total_clubs AS klubova, total_countries AS zemalja
+                FROM competitions WHERE 1=1
+            """
+            params: List[str] = []
+            if f_kind.strip(): q += " AND kind LIKE ?"; params.append(f"%{f_kind}%")
+            if f_year.strip(): q += " AND date_from LIKE ?"; params.append(f"{f_year}%")
+            if f_age.strip():  q += " AND age_group LIKE ?"; params.append(f"%{f_age}%")
+            if f_style.strip():q += " AND style LIKE ?"; params.append(f"%{f_style}%")
+            if f_country.strip(): q += " AND country LIKE ?"; params.append(f"%{f_country}%")
+            q += " ORDER BY date_from DESC"
+            cdf = pd.read_sql_query(q, conn, params=params)
+        else:
+            cdf = pd.read_sql_query("""
+                SELECT id, name AS ime, kind AS vrsta, age_group AS uzrast, style AS stil,
+                       date_from AS od, date_to AS do, place AS mjesto, country AS država, country_code AS ISO3
+                FROM competitions ORDER BY date_from DESC
+            """, conn)
+
+        # formatiranje datuma i rednog broja
+        if 'od' in cdf.columns:
+            try:
+                cdf['od'] = pd.to_datetime(cdf['od']).dt.strftime('%d.%m.%Y.')
+            except Exception:
+                pass
+        if 'do' in cdf.columns:
+            try:
+                cdf['do'] = pd.to_datetime(cdf['do']).dt.strftime('%d.%m.%Y.')
+            except Exception:
+                pass
+        cdf.insert(0, 'R.br.', range(1, len(cdf)+1))
+        st.dataframe(cdf, use_container_width=True)
+
+        conn.close()
+
+
+    # ==========================
+    # ODJELJAK: STATISTIKA
+    # ==========================
+
+    # ODJELJAK: STATISTIKA
+    # ==========================
 def section_stats():
     page_header("Statistika", "Filtri i grafički/tablični prikaz medalja, pobjeda/poraza i borbi")
 
@@ -1531,27 +1555,6 @@ def section_attendance():
                                 VALUES (?,?,?,?)""", (camp_id, mid, int(tnum), float(thrs)))
             conn.commit(); st.success("Sudjelovanje spremljeno.")
 
-    # Statistika za mjesec
-    st.markdown("---")
-    st.subheader("Statistika prisustva (mjesec)")
-    months = sorted(list(set([s[0][:7] for s in conn.execute("SELECT start_ts FROM sessions").fetchall() if s[0]])))
-    month = st.selectbox("Mjesec (YYYY-MM)", months if months else [])
-    if month:
-        s_count = conn.execute("SELECT COUNT(*), COALESCE(SUM((julianday(end_ts)-julianday(start_ts))*24*60),0) FROM sessions WHERE start_ts LIKE ?",
-                               (f"{month}%",)).fetchone()
-        st.write(f"- Broj treninga: **{int(s_count[0])}**")
-        st.write(f"- Ukupno minuta (treneri): **{int(s_count[1])}**")
-        a_count = conn.execute("SELECT COUNT(*), COALESCE(SUM(minutes),0) FROM attendance a JOIN sessions s ON s.id=a.session_id WHERE s.start_ts LIKE ?",
-                               (f"{month}%",)).fetchone()
-        st.write(f"- Prisustava (sportaši): **{int(a_count[0])}**")
-        st.write(f"- Ukupno minuta (sportaši): **{int(a_count[1])}**")
-
-    conn.close()
-
-
-# ==========================
-# NAVIGACIJA I APLIKACIJA
-# ==========================
 def main():
     st.set_page_config(page_title="HK Podravka – Admin", page_icon="🤼", layout="wide")
     css_style()
