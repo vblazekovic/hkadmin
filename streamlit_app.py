@@ -1236,6 +1236,7 @@ def section_coaches():
 # ==========================
 
 def section_competitions():
+    conn = get_conn()
     # Pretraga i pregled natjecanja
         st.markdown("---")
         st.subheader("Pregled i pretraga natjecanja")
@@ -1290,6 +1291,7 @@ def section_competitions():
     # ==========================
 
     # ODJELJAK: STATISTIKA
+    conn.close()
     # ==========================
 def section_stats():
     page_header("Statistika", "Filtri i grafički/tablični prikaz medalja, pobjeda/poraza i borbi")
