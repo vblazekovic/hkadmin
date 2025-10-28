@@ -48,6 +48,24 @@ KLUB_EMAIL  = "hsk-podravka@gmail.com"
 KLUB_ADRESA = "Miklinovec 6a, 48000 Koprivnica"
 KLUB_OIB    = "60911784858"
 KLUB_WEB    = "https://hk-podravka.com"
+
+# Popis država -> ISO3 (ako je pycountry dostupan). Inače prazan pa ćemo u formi imati fallback na text_input.
+try:
+    import pycountry
+    COUNTRIES = {c.name: getattr(c, "alpha_3", "") for c in pycountry.countries}
+    # uobičajeni hrvatski nazivi/aliasi
+    COUNTRIES.update({
+        "Hrvatska":"CRO","Srbija":"SRB","Slovenija":"SVN","Bosna i Hercegovina":"BIH","Sjeverna Makedonija":"MKD",
+        "Crna Gora":"MNE","Albanija":"ALB","Kosovo":"XKX","Italija":"ITA","Njemačka":"DEU","Austrija":"AUT",
+        "Mađarska":"HUN","Francuska":"FRA","Španjolska":"ESP","Švicarska":"CHE","Grčka":"GRC","Turska":"TUR",
+        "Velika Britanija":"GBR","Engleska":"GBR","SAD":"USA","Sjedinjene Američke Države":"USA","Kanada":"CAN",
+        "Češka":"CZE","Poljska":"POL","Nizozemska":"NLD","Belgija":"BEL","Rumunjska":"ROU","Bugarska":"BGR",
+        "Norveška":"NOR","Švedska":"SWE","Finska":"FIN","Danska":"DNK","Portugal":"PRT","Irska":"IRL",
+        "Ukrajina":"UKR","Bjelorusija":"BLR","Rusija":"RUS"
+    })
+except Exception:
+    COUNTRIES = {}
+
 KLUB_IBAN   = "HR6923860021100518154"
 
 DB_PATH     = "hk_podravka.db"
@@ -997,9 +1015,14 @@ def section_competitions():
         place = st.text_input("Mjesto")
 
         # Država iz popisa + automatska kratica (ISO3)
-        country = st.selectbox("Država", sorted(list(COUNTRIES.keys())), key="comp_country")
-        country_code = COUNTRIES.get(country, "")
-        st.text_input("Kratica države (auto)", value=country_code, disabled=True)
+        if COUNTRIES:
+            country = st.selectbox("Država", sorted(list(COUNTRIES.keys())), key="comp_country")
+            country_code = COUNTRIES.get(country, "")
+            st.text_input("Kratica države (auto)", value=country_code, disabled=True)
+        else:
+            country = st.text_input("Država (puni naziv)")
+            country_code = iso3(country)
+            st.text_input("Kratica države (auto)", value=country_code or "", disabled=True)
 
         style = st.selectbox("Hrvački stil", STYLES, key="comp_style")
         age_group = st.selectbox("Uzrast", AGES, key="comp_age")
