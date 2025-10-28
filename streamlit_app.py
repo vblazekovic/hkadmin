@@ -1110,7 +1110,7 @@ def section_coaches():
     st.subheader("Pregled i pretraga rezultata")
     fcol1, fcol2, fcol3, fcol4 = st.columns(4)
     f_kind = fcol1.text_input("Vrsta natjecanja (dio naziva)")
-    f_year = fcol2.text_input("Godina (npr. 2025)", key="res_year")
+    f_year = fcol2.text_input("Godina (npr. 2025)")
     f_cat  = fcol3.text_input("Kategorija (dio naziva)")
     f_name = fcol4.text_input("Sportaš (dio imena)")
 
@@ -1217,7 +1217,7 @@ def section_coaches():
     st.subheader("Pregled i pretraga natjecanja")
     colf = st.columns(5)
     f_kind = colf[0].text_input("Vrsta (dio naziva)")
-    f_year = colf[1].text_input("Godina (npr. 2025)", key="comp_year")
+    f_year = colf[1].text_input("Godina (npr. 2025)")
     f_age  = colf[2].text_input("Uzrast (dio naziva)")
     f_style= colf[3].text_input("Stil (GR/FS/WW/BW/MOD)")
     f_country = colf[4].text_input("Država (dio naziva)")
