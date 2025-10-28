@@ -982,7 +982,9 @@ def section_competitions():
 
     with st.form("comp_form"):
         kind = st.selectbox("Vrsta natjecanja", KINDS)
-        rep_sub = st.selectbox("Podvrsta reprezentativnog nastupa", REP_SUB, disabled=(kind!="REPREZENTATIVNI NASTUP"))
+        rep_sub = ""
+        if kind == "REPREZENTATIVNI NASTUP":
+            rep_sub = st.selectbox("Podvrsta reprezentativnog nastupa", REP_SUB, key="rep_sub")
         custom_kind = st.text_input("Upiši vrstu (ako 'OSTALO')", disabled=(kind!="OSTALO"))
         name = st.text_input("Ime natjecanja (ako postoji naziv)")
         c1, c2 = st.columns(2)
