@@ -461,8 +461,6 @@ def section_club():
     with st.container():
         c1, c2 = st.columns(2)
         with c1:
-            st.image("https://hk-podravka.com/wp-content/uploads/2021/08/cropped-HK-Podravka-logo.png",
-                     caption=KLUB_NAZIV, use_container_width=True)
             logo_upload = st.file_uploader("Učitaj vlastiti logo (opcionalno)", type=["png","jpg","jpeg"])
             logo_path = save_upload(logo_upload, "logo") if logo_upload else ""
             logo_src = logo_path or "https://hk-podravka.com/wp-content/uploads/2021/08/cropped-HK-Podravka-logo.png"
@@ -1560,7 +1558,6 @@ def main():
     init_db()
 
     with st.sidebar:
-        st.image("https://hk-podravka.com/wp-content/uploads/2021/08/cropped-HK-Podravka-logo.png", width=120)
         st.markdown(f"### {KLUB_NAZIV}")
         st.markdown(f"**E-mail:** {KLUB_EMAIL}")
         st.markdown(f"**Adresa:** {KLUB_ADRESA}")
