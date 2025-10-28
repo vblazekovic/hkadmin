@@ -1014,8 +1014,12 @@ def section_competitions():
         # Treneri koji su vodili (iz baze, višestruki izbor)
         coaches_rows = conn.execute("SELECT full_name FROM coaches ORDER BY full_name").fetchall()
         coach_names = [r[0] for r in coaches_rows] if coaches_rows else []
-        coach_multi = st.multiselect("Trener/i (iz baze)", coach_names, key="comp_coaches")
-        coach_text = ", ".join(coach_multi) if coach_multi else ""
+        if coach_names:
+            coach_multi = st.multiselect("Trener/i (iz baze)", coach_names, key="comp_coaches")
+            coach_text = ", ".join(coach_multi) if coach_multi else ""
+        else:
+            st.info("U bazi trenutno nema upisanih trenera — upiši ručno ili dodaj trenere u odjeljku 'Treneri'.")
+            coach_text = st.text_input("Trener/i (ručni unos, odvoji zarezima)")
 
         # Opis i linkovi + upload
         notes = st.text_area("Zapažanje trenera (za objave)")
