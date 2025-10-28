@@ -1124,7 +1124,7 @@ def section_coaches():
     q += " ORDER BY c.date_from DESC, m.full_name ASC"
     res_df = pd.read_sql_query(q, conn, params=params)
     st.dataframe(res_df, use_container_width=True)
-st.success("Natjecanje spremljeno.")
+    st.success("Natjecanje spremljeno.")
 
     # Dodavanje rezultata po sportašu
     st.markdown("---")
@@ -1257,7 +1257,7 @@ st.success("Natjecanje spremljeno.")
 # ==========================
 # ODJELJAK: STATISTIKA
 # ==========================
-========
+
 # ODJELJAK: STATISTIKA
 # ==========================
 def section_stats():
