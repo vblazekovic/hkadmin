@@ -50,6 +50,275 @@ KLUB_OIB    = "60911784858"
 KLUB_WEB    = "https://hk-podravka.com"
 KLUB_IBAN   = "HR6923860021100518154"
 
+COUNTRIES = {
+    "Afghanistan": "AFG",
+    "Albania": "ALB",
+    "Algeria": "DZA",
+    "American Samoa": "ASM",
+    "Andorra": "AND",
+    "Angola": "AGO",
+    "Anguilla": "AIA",
+    "Antarctica": "ATA",
+    "Antigua and Barbuda": "ATG",
+    "Argentina": "ARG",
+    "Armenia": "ARM",
+    "Aruba": "ABW",
+    "Australia": "AUS",
+    "Austria": "AUT",
+    "Azerbaijan": "AZE",
+    "Bahamas": "BHS",
+    "Bahrain": "BHR",
+    "Bangladesh": "BGD",
+    "Barbados": "BRB",
+    "Belarus": "BLR",
+    "Belgium": "BEL",
+    "Belize": "BLZ",
+    "Benin": "BEN",
+    "Bermuda": "BMU",
+    "Bhutan": "BTN",
+    "Bolivia": "BOL",
+    "Bolivia, Plurinational State of": "BOL",
+    "Bonaire, Sint Eustatius and Saba": "BES",
+    "Bosnia and Herzegovina": "BIH",
+    "Botswana": "BWA",
+    "Bouvet Island": "BVT",
+    "Brazil": "BRA",
+    "British Indian Ocean Territory": "IOT",
+    "Brunei Darussalam": "BRN",
+    "Bulgaria": "BGR",
+    "Burkina Faso": "BFA",
+    "Burundi": "BDI",
+    "Cabo Verde": "CPV",
+    "Cambodia": "KHM",
+    "Cameroon": "CMR",
+    "Canada": "CAN",
+    "Cayman Islands": "CYM",
+    "Central African Republic": "CAF",
+    "Chad": "TCD",
+    "Chile": "CHL",
+    "China": "CHN",
+    "Christmas Island": "CXR",
+    "Cocos (Keeling) Islands": "CCK",
+    "Colombia": "COL",
+    "Comoros": "COM",
+    "Congo": "COG",
+    "Congo (Brazzaville)": "COG",
+    "Congo (Kinshasa)": "COD",
+    "Congo, The Democratic Republic of the": "COD",
+    "Cook Islands": "COK",
+    "Costa Rica": "CRI",
+    "Croatia": "HRV",
+    "Cuba": "CUB",
+    "Curaçao": "CUW",
+    "Cyprus": "CYP",
+    "Czechia": "CZE",
+    "Côte d'Ivoire": "CIV",
+    "Denmark": "DNK",
+    "Djibouti": "DJI",
+    "Dominica": "DMA",
+    "Dominican Republic": "DOM",
+    "Ecuador": "ECU",
+    "Egypt": "EGY",
+    "El Salvador": "SLV",
+    "Equatorial Guinea": "GNQ",
+    "Eritrea": "ERI",
+    "Estonia": "EST",
+    "Eswatini": "SWZ",
+    "Ethiopia": "ETH",
+    "Falkland Islands (Malvinas)": "FLK",
+    "Faroe Islands": "FRO",
+    "Fiji": "FJI",
+    "Finland": "FIN",
+    "France": "FRA",
+    "French Guiana": "GUF",
+    "French Polynesia": "PYF",
+    "French Southern Territories": "ATF",
+    "Gabon": "GAB",
+    "Gambia": "GMB",
+    "Georgia": "GEO",
+    "Germany": "DEU",
+    "Ghana": "GHA",
+    "Gibraltar": "GIB",
+    "Greece": "GRC",
+    "Greenland": "GRL",
+    "Grenada": "GRD",
+    "Guadeloupe": "GLP",
+    "Guam": "GUM",
+    "Guatemala": "GTM",
+    "Guernsey": "GGY",
+    "Guinea": "GIN",
+    "Guinea-Bissau": "GNB",
+    "Guyana": "GUY",
+    "Haiti": "HTI",
+    "Heard Island and McDonald Islands": "HMD",
+    "Holy See (Vatican City State)": "VAT",
+    "Honduras": "HND",
+    "Hong Kong": "HKG",
+    "Hungary": "HUN",
+    "Iceland": "ISL",
+    "India": "IND",
+    "Indonesia": "IDN",
+    "Iran": "IRN",
+    "Iran, Islamic Republic of": "IRN",
+    "Iraq": "IRQ",
+    "Ireland": "IRL",
+    "Isle of Man": "IMN",
+    "Israel": "ISR",
+    "Italy": "ITA",
+    "Jamaica": "JAM",
+    "Japan": "JPN",
+    "Jersey": "JEY",
+    "Jordan": "JOR",
+    "Kazakhstan": "KAZ",
+    "Kenya": "KEN",
+    "Kiribati": "KIR",
+    "Korea, Democratic People's Republic of": "PRK",
+    "Korea, Republic of": "KOR",
+    "Kosovo": "XKX",
+    "Kuwait": "KWT",
+    "Kyrgyzstan": "KGZ",
+    "Lao People's Democratic Republic": "LAO",
+    "Laos": "LAO",
+    "Latvia": "LVA",
+    "Lebanon": "LBN",
+    "Lesotho": "LSO",
+    "Liberia": "LBR",
+    "Libya": "LBY",
+    "Liechtenstein": "LIE",
+    "Lithuania": "LTU",
+    "Luxembourg": "LUX",
+    "Macao": "MAC",
+    "Madagascar": "MDG",
+    "Malawi": "MWI",
+    "Malaysia": "MYS",
+    "Maldives": "MDV",
+    "Mali": "MLI",
+    "Malta": "MLT",
+    "Marshall Islands": "MHL",
+    "Martinique": "MTQ",
+    "Mauritania": "MRT",
+    "Mauritius": "MUS",
+    "Mayotte": "MYT",
+    "Mexico": "MEX",
+    "Micronesia": "FSM",
+    "Micronesia, Federated States of": "FSM",
+    "Moldova": "MDA",
+    "Moldova, Republic of": "MDA",
+    "Monaco": "MCO",
+    "Mongolia": "MNG",
+    "Montenegro": "MNE",
+    "Montserrat": "MSR",
+    "Morocco": "MAR",
+    "Mozambique": "MOZ",
+    "Myanmar": "MMR",
+    "Namibia": "NAM",
+    "Nauru": "NRU",
+    "Nepal": "NPL",
+    "Netherlands": "NLD",
+    "New Caledonia": "NCL",
+    "New Zealand": "NZL",
+    "Nicaragua": "NIC",
+    "Niger": "NER",
+    "Nigeria": "NGA",
+    "Niue": "NIU",
+    "Norfolk Island": "NFK",
+    "North Korea": "PRK",
+    "North Macedonia": "MKD",
+    "Northern Mariana Islands": "MNP",
+    "Norway": "NOR",
+    "Oman": "OMN",
+    "Pakistan": "PAK",
+    "Palau": "PLW",
+    "Palestine": "PSE",
+    "Palestine, State of": "PSE",
+    "Panama": "PAN",
+    "Papua New Guinea": "PNG",
+    "Paraguay": "PRY",
+    "Peru": "PER",
+    "Philippines": "PHL",
+    "Pitcairn": "PCN",
+    "Poland": "POL",
+    "Portugal": "PRT",
+    "Puerto Rico": "PRI",
+    "Qatar": "QAT",
+    "Romania": "ROU",
+    "Russia": "RUS",
+    "Russian Federation": "RUS",
+    "Rwanda": "RWA",
+    "Réunion": "REU",
+    "Saint Barthélemy": "BLM",
+    "Saint Helena, Ascension and Tristan da Cunha": "SHN",
+    "Saint Kitts and Nevis": "KNA",
+    "Saint Lucia": "LCA",
+    "Saint Martin (French part)": "MAF",
+    "Saint Pierre and Miquelon": "SPM",
+    "Saint Vincent and the Grenadines": "VCT",
+    "Samoa": "WSM",
+    "San Marino": "SMR",
+    "Sao Tome and Principe": "STP",
+    "Saudi Arabia": "SAU",
+    "Senegal": "SEN",
+    "Serbia": "SRB",
+    "Seychelles": "SYC",
+    "Sierra Leone": "SLE",
+    "Singapore": "SGP",
+    "Sint Maarten (Dutch part)": "SXM",
+    "Slovakia": "SVK",
+    "Slovenia": "SVN",
+    "Solomon Islands": "SLB",
+    "Somalia": "SOM",
+    "South Africa": "ZAF",
+    "South Georgia and the South Sandwich Islands": "SGS",
+    "South Korea": "KOR",
+    "South Sudan": "SSD",
+    "Spain": "ESP",
+    "Sri Lanka": "LKA",
+    "Sudan": "SDN",
+    "Suriname": "SUR",
+    "Svalbard and Jan Mayen": "SJM",
+    "Sweden": "SWE",
+    "Switzerland": "CHE",
+    "Syria": "SYR",
+    "Syrian Arab Republic": "SYR",
+    "Taiwan, Province of China": "TWN",
+    "Tajikistan": "TJK",
+    "Tanzania": "TZA",
+    "Tanzania, United Republic of": "TZA",
+    "Thailand": "THA",
+    "Timor-Leste": "TLS",
+    "Togo": "TGO",
+    "Tokelau": "TKL",
+    "Tonga": "TON",
+    "Trinidad and Tobago": "TTO",
+    "Tunisia": "TUN",
+    "Turkey": "TUR",
+    "Turkmenistan": "TKM",
+    "Turks and Caicos Islands": "TCA",
+    "Tuvalu": "TUV",
+    "Uganda": "UGA",
+    "Ukraine": "UKR",
+    "United Arab Emirates": "ARE",
+    "United Kingdom": "GBR",
+    "United States": "USA",
+    "United States Minor Outlying Islands": "UMI",
+    "Uruguay": "URY",
+    "Uzbekistan": "UZB",
+    "Vanuatu": "VUT",
+    "Venezuela": "VEN",
+    "Venezuela, Bolivarian Republic of": "VEN",
+    "Viet Nam": "VNM",
+    "Vietnam": "VNM",
+    "Virgin Islands, British": "VGB",
+    "Virgin Islands, U.S.": "VIR",
+    "Wallis and Futuna": "WLF",
+    "Western Sahara": "ESH",
+    "Yemen": "YEM",
+    "Zambia": "ZMB",
+    "Zimbabwe": "ZWE",
+    "Åland Islands": "ALA",
+}
+
+
 DB_PATH     = "hk_podravka.db"
 UPLOAD_DIR  = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -459,7 +728,7 @@ def section_club():
         c1, c2 = st.columns(2)
         with c1:
             st.image("https://hk-podravka.com/wp-content/uploads/2021/08/cropped-HK-Podravka-logo.png",
-                     caption=KLUB_NAZIV, use_container_width=True)
+                     caption=KLUB_NAZIV, use_column_width=True)
             logo_upload = st.file_uploader("Učitaj vlastiti logo (opcionalno)", type=["png","jpg","jpeg"])
             logo_path = save_upload(logo_upload, "logo") if logo_upload else ""
 
@@ -485,9 +754,9 @@ def section_club():
         secretary = st.text_input("Tajnik kluba", df.loc[0, "secretary"] if "secretary" in df.columns else "")
 
         st.markdown("**Članovi predsjedništva**")
-        board_df = st.data_editor(pd.DataFrame(columns=["ime_prezime","telefon","email"]), num_rows="dynamic", use_container_width=True, hide_index=True, key="board_editor")
+        board_df = st.data_editor(pd.DataFrame(columns=["ime_prezime","telefon","email"]), num_rows="dynamic", use_column_width=True, hide_index=True, key="board_editor")
         st.markdown("**Nadzorni odbor**")
-        superv_df = st.data_editor(pd.DataFrame(columns=["ime_prezime","telefon","email"]), num_rows="dynamic", use_container_width=True, hide_index=True, key="supervisor_editor")
+        superv_df = st.data_editor(pd.DataFrame(columns=["ime_prezime","telefon","email"]), num_rows="dynamic", use_column_width=True, hide_index=True, key="supervisor_editor")
 
         st.subheader("Dokumenti kluba")
         d1, d2, d3 = st.columns(3)
@@ -526,7 +795,7 @@ def section_club():
 
     # Pregled dokumenata
     doc_df = pd.read_sql_query("SELECT id, kind AS vrsta, filename AS datoteka, uploaded_at AS datum FROM club_docs ORDER BY id DESC", conn)
-    st.dataframe(doc_df, use_container_width=True)
+    st.dataframe(doc_df, use_column_width=True)
     conn.close()
 
 
@@ -731,7 +1000,7 @@ def section_members():
         mdf["liječnička_do"] = mdf["liječnička_do"].apply(fmt_date)
         mdf.insert(3, "starost", ages)
 
-    st.dataframe(mdf, use_container_width=True)
+    st.dataframe(mdf, use_column_width=True)
 
     # Export članova
     st.download_button("Skini sve članove (Excel)",
@@ -851,7 +1120,7 @@ def section_members():
         # formatiraj datum
         if not rdf.empty:
             rdf["datum"] = pd.to_datetime(rdf["datum"]).dt.strftime("%d.%m.%Y.")
-        st.dataframe(rdf, use_container_width=True)
+        st.dataframe(rdf, use_column_width=True)
 
         colbtn1, colbtn2 = st.columns(2)
         if colbtn1.button("Obriši ovog člana"):
@@ -903,7 +1172,7 @@ def section_coaches():
     # Uređivanje/brisanje trenera
     st.subheader("Uredi / obriši trenera")
     tdf = pd.read_sql_query("SELECT id, full_name AS ime_prezime, dob, email, iban FROM coaches", conn)
-    st.dataframe(tdf, use_container_width=True)
+    st.dataframe(tdf, use_column_width=True)
     st.download_button("Skini trenere (Excel)",
                        data=excel_bytes_from_df(tdf, "Treneri"),
                        file_name="treneri.xlsx")
@@ -989,8 +1258,10 @@ def section_competitions():
         date_from = c1.date_input("Datum od", value=date.today())
         date_to = c2.date_input("Datum do (ako 1 dan, ostavi isti)", value=date.today())
         place = st.text_input("Mjesto")
-        country = st.text_input("Država (puni naziv)")
-        auto_iso = iso3(country)
+        country = st.selectbox("Država", sorted(list(COUNTRIES.keys())))
+        country_code = COUNTRIES.get(country, "")
+        auto_iso = country_code
+        st.text_input("Kratica države (auto)", value=auto_iso, disabled=True)
         style = st.selectbox("Hrvački stil", STYLES)
         age_group = st.selectbox("Uzrast", AGES)
         c3, c4, c5 = st.columns(3)
@@ -1002,7 +1273,10 @@ def section_competitions():
         total_countries = c7.number_input("Broj zemalja", min_value=0, step=1)
 
         # Treneri koji su vodili
-        coach_text = st.text_input("Trener(i) (odvoji zarezima)")
+        coaches_rows = conn.execute("SELECT full_name FROM coaches ORDER BY full_name").fetchall()
+        coach_names = [r[0] for r in coaches_rows] if coaches_rows else []
+        coach_multi = st.multiselect("Trener/i (iz baze)", coach_names)
+        coach_text = ", ".join(coach_multi) if coach_multi else ""
 
         # Opis i linkovi + upload
         notes = st.text_area("Zapažanje trenera (za objave)")
@@ -1160,7 +1434,7 @@ def section_competitions():
         except Exception:
             pass
     cdf.insert(0, 'R.br.', range(1, len(cdf)+1))
-    st.dataframe(cdf, use_container_width=True)
+    st.dataframe(cdf, use_column_width=True)
 
     conn.close()
 
@@ -1199,7 +1473,7 @@ def section_stats():
             q += " AND (c.kind LIKE ?)"; params.append(f"%{kind}%")
         q += " GROUP BY c.kind, c.age_group, c.style ORDER BY broj_natjecanja DESC"
         sdf = pd.read_sql_query(q, conn, params=params)
-        st.dataframe(sdf, use_container_width=True)
+        st.dataframe(sdf, use_column_width=True)
 
         # Grafovi
         if not sdf.empty:
@@ -1273,7 +1547,7 @@ def section_groups():
             SELECT m.id, m.full_name AS član, m.active_competitor AS aktivni, m.veteran
             FROM members m WHERE m.group_id=? ORDER BY m.full_name
         """, conn, params=(gid,))
-        st.dataframe(gdf, use_container_width=True)
+        st.dataframe(gdf, use_column_width=True)
         # Premještanje člana
         mems = conn.execute("SELECT id, full_name FROM members ORDER BY full_name").fetchall()
         sel = st.selectbox(f"Premjesti člana u '{gname}'", [f"{m[0]} – {m[1]}" for m in mems], key=f"mv_{gid}")
@@ -1316,7 +1590,7 @@ def section_veterans():
         SELECT id, full_name AS ime_prezime, athlete_email, parent_email, athlete_phone, parent_phone
         FROM members WHERE veteran=1 ORDER BY full_name
     """, conn)
-    st.dataframe(vdf, use_container_width=True)
+    st.dataframe(vdf, use_column_width=True)
 
     if not vdf.empty:
         sel = st.selectbox("Odaberi veterana (ID – ime)", [f"{r['id']} – {r['ime_prezime']}" for _, r in vdf.iterrows()])
