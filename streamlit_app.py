@@ -3,6 +3,23 @@
 HK Podravka – klupska web-admin aplikacija (Streamlit, 1-file .py)
 Autor: ChatGPT (GPT-5 Thinking)
 
+# --- Safe fallbacks to prevent NameError in section_competitions ---
+try:
+    COUNTRIES  # noqa
+except NameError:
+    try:
+        import pycountry
+        COUNTRIES = {c.name: getattr(c, "alpha_3", "") for c in pycountry.countries}
+    except Exception:
+        COUNTRIES = {
+            "Hrvatska":"CRO","Srbija":"SRB","Slovenija":"SVN","Bosna i Hercegovina":"BIH",
+            "Mađarska":"HUN","Italija":"ITA","Njemačka":"DEU","Austrija":"AUT",
+            "Francuska":"FRA","Španjolska":"ESP","Švicarska":"CHE","Turska":"TUR",
+            "SAD":"USA","Kanada":"CAN","Ujedinjeno Kraljevstvo":"GBR"
+        }
+
+
+
 ▶ Pokretanje lokalno:
     pip install -r requirements.txt
     streamlit run hk_podravka_app.py
