@@ -380,12 +380,10 @@ def css_style():
 
 
 
+
 def page_header(title: str, subtitle: str = ""):
-    # Bijela podloga i logo gore desno
-    st.markdown(
-        "<style>.block-container{background:white;} .appview-container{background:white;}</style>",
-        unsafe_allow_html=True
-    )
+    # White background + logo in top-right
+    st.markdown("<style>.block-container{background:white;} .appview-container{background:white;}</style>", unsafe_allow_html=True)
     hcol1, hcol2 = st.columns([4,1])
     with hcol1:
         st.markdown(f"<h2 style='margin-bottom:0'>{title}</h2>", unsafe_allow_html=True)
@@ -393,9 +391,14 @@ def page_header(title: str, subtitle: str = ""):
             st.caption(subtitle)
     with hcol2:
         try:
-            st.image("LOGO.jpg", use_column_width=True)
+            from pathlib import Path as _P
+            _logo_path = str(_P(__file__).with_name("LOGO.jpg"))
+            st.image(_logo_path, use_column_width=True)
         except Exception:
-            pass
+            try:
+                st.image("LOGO.jpg", use_column_width=True)
+            except Exception:
+                pass
 
 def save_upload(file, subdir: str) -> str:
     """Spremi upload u uploads/subdir i vrati relativnu putanju."""
@@ -905,16 +908,16 @@ def section_coaches():
     conn = get_conn()
     with st.form("coach_form"):
         c1, c2 = st.columns(2)
-        first_name = c1.text_input("Ime")
-        last_name  = c1.text_input("Prezime")
+        first_name = c1.text_input("Ime", key="coach_ime")
+        last_name  = c1.text_input("Prezime", key="coach_prezime")
         full_name = f"{first_name} {last_name}".strip()
-        dob = c1.date_input("Datum rođenja", value=None)
-        oib = c1.text_input("OIB")
-        email = c2.text_input("E-mail")
-        iban = c2.text_input("IBAN račun")
+        dob = c1.date_input("Datum rođenja", value=None, key="coach_dob")
+        oib = c1.text_input("OIB", key="coach_oib")
+        email = c2.text_input("E-mail", key="coach_email")
+        iban = c2.text_input("IBAN račun", key="coach_iban")
         # Grupa pri upisu
         groups = [r[0] for r in conn.execute("SELECT name FROM groups ORDER BY name").fetchall()]
-        group_name = c2.selectbox("Grupa", [""] + groups)
+        group_name = c2.selectbox("Grupa", [""] + groups, key="coach_group")
         photo = st.file_uploader("Slika (jpg/png)", type=["jpg","jpeg","png"])
         submit = st.form_submit_button("Spremi trenera")
 
