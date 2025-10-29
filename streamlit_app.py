@@ -314,7 +314,7 @@ def init_db():
               KLUB_EMAIL, KLUB_ADRESA, KLUB_OIB, KLUB_WEB, KLUB_IBAN,
               "", "", "", "", "", datetime.now().isoformat(), datetime.now().isoformat()))
     conn.commit()
-        st.success("Natjecanje spremljeno.")
+    st.success("Natjecanje spremljeno.")
     conn.close()
 
 
