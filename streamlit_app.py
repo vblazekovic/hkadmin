@@ -58,22 +58,6 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 # ==========================
 # POMOĆNE FUNKCIJE
 # ==========================
-
-
-
-
-from io import BytesIO as _BytesIO
-from datetime import date as _date
-def download_df_as_excel_button(df, filename_base: str):
-    import streamlit as st
-    buf = _BytesIO(); df.to_excel(buf, index=False); buf.seek(0)
-    st.download_button("💾 Preuzmi Excel", data=buf.getvalue(), file_name=f"{filename_base}_{_date.today().isoformat()}.xlsx")
-def table_exists(conn, name: str) -> bool:
-    try:
-        cur = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?;", (name,))
-        return cur.fetchone() is not None
-    except Exception:
-        return False
 def get_conn():
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
     conn.execute("PRAGMA foreign_keys = ON")
@@ -268,7 +252,7 @@ def init_db():
         )
     """)
 
-
+    
     ensure_column("competition_results","age_group","TEXT")
 # Prisustvo: treneri (sesije) i članovi (dolazak)
     cur.execute("""
@@ -330,7 +314,7 @@ def init_db():
               KLUB_EMAIL, KLUB_ADRESA, KLUB_OIB, KLUB_WEB, KLUB_IBAN,
               "", "", "", "", "", datetime.now().isoformat(), datetime.now().isoformat()))
     conn.commit()
-    st.success("Natjecanje spremljeno.")
+        st.success("Natjecanje spremljeno.")
     conn.close()
 
 
@@ -409,7 +393,7 @@ def show_logo_safe(logo_path_or_url: str | None, caption: str = "", width=None, 
         if pth.exists() and pth.is_file():
             st.image(str(pth), caption=caption, width=width, use_column_width=use_column_width)
             return
-        show_logo_safe(logo_path_or_url, caption=caption, width=width, use_column_width=use_column_width)
+        st.image(logo_path_or_url, caption=caption, width=width, use_column_width=use_column_width)
     except Exception as e:
         st.warning(f"Logo nije moguće učitati ({e.__class__.__name__}).")
         if caption:
@@ -850,7 +834,7 @@ def section_members():
                     style = "color:#b00020; font-weight:600;"
                 med2.markdown(f"<div style='{style}'>Preostalo: {days_left} dana</div>", unsafe_allow_html=True)
 
-            if st.form_submit_button("Spremi izmjene")
+            if st.form_submit_button("Spremi izmjene"):
                 full_name = f"{data['first_name']} {data['last_name']}".strip() or data.get("full_name","")
                 data["full_name"] = full_name
                 gid = None
@@ -915,37 +899,6 @@ def section_members():
 # ==========================
 # ODJELJAK: TRENERI
 # ==========================
-
-# --- Export članova ---
-try:
-    conn = get_conn()
-    df_members = pd.read_sql_query("SELECT * FROM members ORDER BY last_name, first_name", conn)
-    conn.close()
-    with st.expander("📥 Export članova (CSV/Excel)"):
-        st.dataframe(df_members, use_container_width=True)
-        from io import BytesIO
-        buf = BytesIO(); df_members.to_excel(buf, index=False); buf.seek(0)
-        st.download_button("💾 Preuzmi Excel", data=buf.getvalue(), file_name="clanovi_export.xlsx", key="members_export_xlsx")
-        st.download_button("⬇️ Preuzmi CSV", data=df_members.to_csv(index=False).encode("utf-8"), file_name="clanovi_export.csv", key="members_export_csv")
-except Exception as e:
-    st.info(f"Export članova: {e}")
-
-
-# --- Brzo pretraživanje članova ---
-try:
-    conn = get_conn()
-    if table_exists(conn, "members"):
-        q = st.text_input("🔎 Pretraži članove (ime/prezime)", key="members_quick_search")
-        df = pd.read_sql_query("SELECT * FROM members", conn)
-        if q:
-            m = q.lower()
-            df = df[df.apply(lambda r: any(m in str(v).lower() for v in [r.get('full_name',''), r.get('first_name',''), r.get('last_name','')]), axis=1)]
-        with st.expander("Pregled članova"):
-            st.dataframe(df, use_container_width=True)
-    conn.close()
-except Exception as e:
-    st.info(f"Pretraživanje članova: {e}")
-
 def section_coaches():
     page_header("Treneri", "Upis, uređivanje, dokumenti i Excel import/export")
 
@@ -1042,176 +995,7 @@ def section_coaches():
 
 
 # ==========================
-
-
-# --- Export trenera ---
-try:
-    conn = get_conn()
-    df_coaches = pd.read_sql_query("SELECT * FROM coaches ORDER BY last_name, first_name", conn)
-    conn.close()
-    with st.expander("📥 Export trenera (CSV/Excel)"):
-        st.dataframe(df_coaches, use_container_width=True)
-        from io import BytesIO
-        buf2 = BytesIO(); df_coaches.to_excel(buf2, index=False); buf2.seek(0)
-        st.download_button("💾 Preuzmi Excel", data=buf2.getvalue(), file_name="treneri_export.xlsx", key="coaches_export_xlsx")
-        st.download_button("⬇️ Preuzmi CSV", data=df_coaches.to_csv(index=False).encode("utf-8"), file_name="treneri_export.csv", key="coaches_export_csv")
-except Exception as e:
-    st.info(f"Export trenera: {e}")
-
-
-# --- Brzo pretraživanje trenera ---
-try:
-    conn = get_conn()
-    if table_exists(conn, "coaches"):
-        q = st.text_input("🔎 Pretraži trenere (ime/prezime)", key="coaches_quick_search")
-        df = pd.read_sql_query("SELECT * FROM coaches", conn)
-        if q:
-            m = q.lower()
-            df = df[df.apply(lambda r: any(m in str(v).lower() for v in [r.get('full_name',''), r.get('first_name',''), r.get('last_name','')]), axis=1)]
-        with st.expander("Pregled trenera"):
-            st.dataframe(df, use_container_width=True)
-    conn.close()
-except Exception as e:
-    st.info(f"Pretraživanje trenera: {e}")
-
 def section_competitions():
-    import streamlit as st
-    from datetime import date
-    conn = get_conn()
-
-    page_header("Natjecanja i rezultati", "Unos natjecanja, datoteka, rezultata i pregled")
-
-    # Definirane opcije
-    KINDS = [
-        "PRVENSTVO HRVATSKE","MEĐUNARODNI TURNIR","REPREZENTATIVNI NASTUP",
-        "HRVAČKA LIGA ZA SENIORE","MEĐUNARODNA HRVAČKA LIGA ZA KADETE",
-        "REGIONALNO PRVENSTVO","LIGA ZA DJEVOJČICE","OSTALO"
-    ]
-    REP_SUB = ["PRVENSTVO EUROPE","PRVENSTVO SVIJETA","PRVENSTVO BALKANA","UWW TURNIR","OSTALO"]
-    STYLES = ["GR","FS","WW","BW"]
-    AGES = ["POČETNICI","U11","U13","U15","U17","U20","U23","SENIORI"]
-
-    # Countries with ISO + IOC
-    try:
-        import pycountry
-        COUNTRIES = sorted(
-            [(f"{c.name} ({getattr(c,'alpha_3','').upper()})",
-              getattr(c,'alpha_3','').lower(),
-              getattr(c,'alpha_3','').upper())
-             for c in pycountry.countries],
-            key=lambda x: x[0]
-        )
-    except Exception:
-        COUNTRIES = [("Croatia (CRO)","hrv","CRO"),("Serbia (SRB)","srb","SRB"),("Slovenia (SLO)","svn","SLO")]
-
-    with st.form("comp_form"):
-        kind = st.selectbox("Vrsta natjecanja", KINDS, key="comp_kind")
-        subtype = ""
-        if kind == "REPREZENTATIVNI NASTUP":
-            rep_choice = st.selectbox("Podvrsta reprezentativnog nastupa", REP_SUB, key="comp_rep_sub")
-            subtype = st.text_input("Upiši podvrstu reprezentativnog nastupa", key="comp_rep_custom") if rep_choice=="OSTALO" else rep_choice
-        elif kind == "OSTALO":
-            subtype = st.text_input("Upiši vrstu (ako 'OSTALO')", key="comp_kind_custom")
-
-        name = st.text_input("Ime natjecanja (ako postoji naziv)", key="comp_name")
-        c1, c2 = st.columns(2)
-        date_from = c1.date_input("Datum od", value=date.today(), key="comp_date_from")
-        date_to = c2.date_input("Datum do (ako 1 dan, ostavi isti)", value=date.today(), key="comp_date_to")
-
-        # Zemlja
-        country_names = [n for n,_,__ in COUNTRIES]
-        sel_country = st.selectbox("Zemlja", country_names, key="comp_country")
-        iso_code = next(iso for n,iso,_ in COUNTRIES if n==sel_country)
-        ioc_code = next(ioc for n,_,ioc in COUNTRIES if n==sel_country)
-        st.text_input("ISO3 (auto)", iso_code, disabled=True)
-        st.text_input("IOC (auto)", ioc_code, disabled=True)
-
-        place = st.text_input("Mjesto", key="comp_place")
-        style = st.selectbox("Hrvački stil", STYLES, key="comp_style")
-        age_group = st.selectbox("Uzrast", AGES, key="comp_age")
-
-        c3,c4,c5 = st.columns(3)
-        club_competitors = c3.number_input("Broj naših hrvača", min_value=0, step=1, key="comp_hrvaci")
-        team_rank = c4.text_input("Ekipni plasman", key="comp_team_rank")
-
-        # Auto wins/losses if competition_results exists
-        auto_results = table_exists(conn, "competition_results")
-        if auto_results:
-            st.info("Broj pobjeda/poraza se računa automatski iz competition_results (ako podaci postoje).")
-            wins = 0; losses = 0
-        else:
-            c6, c7 = st.columns(2)
-            wins = c6.number_input("Ukupan broj pobjeda", min_value=0, step=1, key="comp_wins")
-            losses = c7.number_input("Ukupan broj poraza", min_value=0, step=1, key="comp_losses")
-
-        # Trener(i)
-        coaches = []
-        if table_exists(conn, "coaches"):
-            try:
-                coaches = [r[0] for r in conn.execute("SELECT full_name FROM coaches ORDER BY full_name").fetchall()]
-            except Exception:
-                coaches = []
-        mode = st.radio("Odabir trenera", ["Jedan","Više"], horizontal=True, key="comp_tr_mode")
-        if mode == "Jedan":
-            coach_text = st.selectbox("Trener", coaches if coaches else [""], key="comp_tr_one")
-        else:
-            coach_text = ", ".join(st.multiselect("Treneri", coaches, key="comp_tr_many"))
-
-        submit = st.form_submit_button("Spremi natjecanje")
-
-
-if submit:
-        errors = []
-        if not kind: errors.append("Odaberi vrstu natjecanja.")
-        if not sel_country: errors.append("Odaberi državu.")
-        if not place: errors.append("Upiši mjesto.")
-        if date_to < date_from: errors.append("Datum 'do' ne može biti prije 'od'.")
-        if mode == "Jedan" and (not coach_text or coach_text.strip()==""): errors.append("Odaberi trenera.")
-        if mode == "Više" and (not coach_text or coach_text.strip()==""): errors.append("Odaberi barem jednog trenera.")
-        if errors:
-            for e in errors: st.error(e)
-        else:
-            conn.execute(
-            "INSERT INTO competitions (name,kind,subtype,date_from,date_to,country,iso_code,ioc_code,place,style,age_group,club_competitors,team_rank,wins,losses,coaches_text) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (name, kind, subtype, str(date_from), str(date_to), sel_country, iso_code, ioc_code, place, style, age_group, int(club_competitors), team_rank, int(wins), int(losses), coach_text)
-        )
-            conn.commit()
-            st.success("Natjecanje spremljeno.")
-
-    # --- Sažetak ---
-    st.markdown("---"); st.subheader("Sažetak natjecanja")
-    view_mode = st.radio("Prikaz", ["Statistika kluba","Statistika sportaša"], horizontal=True, key="comp_view_mode")
-
-    if view_mode == "Statistika kluba":
-        f1,f2,f3,f4 = st.columns(4)
-        year = f1.text_input("Godina (npr. 2025)", key="sum_year")
-        style_f = f2.selectbox("Stil", ["Svi"]+STYLES, key="sum_style")
-        age_f = f3.selectbox("Uzrast", ["Svi"]+AGES, key="sum_age")
-        rep = f4.checkbox("Samo reprezentativni", key="sum_rep")
-
-        df = compute_competition_stats(conn, None)
-        if not df.empty:
-            if year: df = df[df["datum_od"].str.contains(year)]
-            if style_f!="Svi": df = df[df["stil"]==style_f]
-            if age_f!="Svi": df = df[df["uzrast"]==age_f]
-            if rep: df = df[df["vrsta_natjecanja"]=="REPREZENTATIVNI NASTUP"]
-        cols = ["vrsta_natjecanja","podvrsta","datum_od","datum_do","država","mjesto","stil","uzrast","nastupilo_hrvača","ekipni_plasman","pobjeda","poraza","treneri"]
-        st.dataframe(df[cols] if not df.empty else df, use_container_width=True)
-        if not df.empty: download_df_as_excel_button(df, "natjecanja_statistika")
-    else:
-        members = conn.execute("SELECT id, full_name FROM members ORDER BY full_name").fetchall() if table_exists(conn,"members") else []
-        if members:
-            sel = st.selectbox("Sportaš", [f"{m[0]} – {m[1]}" for m in members], key="comp_member_sel")
-            mid = int(sel.split(" – ")[0])
-            df = compute_competition_stats(conn, mid)
-            yf = st.text_input("Godina (npr. 2025)", key="sum_year_ath")
-            if yf and not df.empty: df = df[df["datum_od"].str.contains(yf)]
-            cols = ["vrsta_natjecanja","podvrsta","datum_od","datum_do","država","mjesto","stil","uzrast","nastupilo_hrvača","ekipni_plasman","pobjeda","poraza","treneri","plasman"]
-            st.dataframe(df[cols] if not df.empty else df, use_container_width=True)
-            if not df.empty: download_df_as_excel_button(df, "natjecanja_sportas")
-        else:
-            st.info("Nema unesenih sportaša.")
-
 
 def compute_competition_stats(conn, member_id: int | None = None):
     import pandas as pd
@@ -1287,7 +1071,7 @@ def compute_competition_stats(conn, member_id: int | None = None):
         date_from = c1.date_input("Datum od", value=date.today())
         date_to = c2.date_input("Datum do (ako 1 dan, ostavi isti)", value=date.today())
         place = st.text_input("Mjesto")
-
+        
 # Zemlja (select) + automatska ISO3 kratica
 
 try:
@@ -1326,7 +1110,7 @@ auto_iso = _iso
         total_countries = c7.number_input("Broj zemalja", min_value=0, step=1)
 
         # Treneri koji su vodili
-
+        
 st.write("Trener(i)")
 _mode = st.radio("Odabir", ["Jedan", "Više"], horizontal=True, key="comp_trainer_mode")
 _coaches = [r[0] for r in conn.execute("SELECT full_name FROM coaches ORDER BY full_name").fetchall()]
@@ -1349,7 +1133,7 @@ else:
         # Slike
         photos = st.file_uploader("Slike s natjecanja (više datoteka)", type=["jpg","jpeg","png"], accept_multiple_files=True)
 
-        submit = st.form_submit_button("Spremi natjecanje")
+        submit = st.form_submit_button("Spremi natjecanje")jecanje")
 
     if submit:
         bull_p = save_upload(bulletin_file, "competitions/docs") if bulletin_file else ""
@@ -1369,7 +1153,7 @@ else:
             conn.execute("INSERT INTO competition_photos (competition_id,filename,path,uploaded_at) VALUES (?,?,?,?)",
                          (comp_id, ph.name, p, datetime.now().isoformat()))
         conn.commit()
-
+        
 
 # --- Klub / Sportaš statistika tablica ispod ---
 st.markdown("---")
@@ -1535,7 +1319,7 @@ else:
         except Exception as e:
             st.error(f"Greška pri uvozu: {e}")
     # Export svih rezultata
-
+    
     res_all = pd.read_sql_query("""        SELECT cr.id, c.name AS natjecanje, c.date_from AS datum, m.full_name AS sportaš,
                cr.weight_category AS kategorija, cr.style AS stil,
                cr.bouts_total AS borbi, cr.wins AS pobjede, cr.losses AS porazi, cr.placement AS plasman
@@ -1709,44 +1493,6 @@ def section_stats():
     del_c_id = st.number_input("ID trenera za brisanje", min_value=0, step=1)
     if st.button("Obriši trenera") and del_c_id > 0:
         conn = get_conn(); conn.execute("DELETE FROM coaches WHERE id=?", (int(del_c_id),)); conn.commit(); st.success("Trener obrisan.")
-
-# --- Brzi export ključnih tablica (competitions/members/coaches) ---
-try:
-    conn = get_conn()
-    with st.expander("📦 Brzi export tablica"):
-        tabs = st.tabs(["Natjecanja", "Članovi", "Treneri"])
-        with tabs[0]:
-            if table_exists(conn, "competitions"):
-                dfc = pd.read_sql_query("SELECT * FROM competitions ORDER BY date_from DESC", conn)
-                st.dataframe(dfc, use_container_width=True)
-                from io import BytesIO
-                b0 = BytesIO(); dfc.to_excel(b0, index=False); b0.seek(0)
-                st.download_button("💾 Excel natjecanja", data=b0.getvalue(), file_name="competitions.xlsx", key="stats_comp_xlsx")
-                st.download_button("⬇️ CSV natjecanja", data=dfc.to_csv(index=False).encode("utf-8"), file_name="competitions.csv", key="stats_comp_csv")
-            else:
-                st.info("Nema tablice 'competitions'.")
-        with tabs[1]:
-            if table_exists(conn, "members"):
-                dfm = pd.read_sql_query("SELECT * FROM members ORDER BY full_name", conn)
-                st.dataframe(dfm, use_container_width=True)
-                b1 = BytesIO(); dfm.to_excel(b1, index=False); b1.seek(0)
-                st.download_button("💾 Excel članovi", data=b1.getvalue(), file_name="members.xlsx", key="stats_mem_xlsx")
-                st.download_button("⬇️ CSV članovi", data=dfm.to_csv(index=False).encode("utf-8"), file_name="members.csv", key="stats_mem_csv")
-            else:
-                st.info("Nema tablice 'members'.")
-        with tabs[2]:
-            if table_exists(conn, "coaches"):
-                dfco = pd.read_sql_query("SELECT * FROM coaches ORDER BY full_name", conn)
-                st.dataframe(dfco, use_container_width=True)
-                b2 = BytesIO(); dfco.to_excel(b2, index=False); b2.seek(0)
-                st.download_button("💾 Excel treneri", data=b2.getvalue(), file_name="coaches.xlsx", key="stats_coach_xlsx")
-                st.download_button("⬇️ CSV treneri", data=dfco.to_csv(index=False).encode("utf-8"), file_name="coaches.csv", key="stats_coach_csv")
-            else:
-                st.info("Nema tablice 'coaches'.")
-    conn.close()
-except Exception as e:
-    st.info(f"Export u statistici: {e}")
-
 def section_groups():
     page_header("Grupe", "Dodavanje/uređivanje/brisanje i raspored članova + Excel import/export")
 
@@ -1768,10 +1514,10 @@ def section_groups():
                 st.warning("Grupa već postoji.")
         if edit_id and new_name:
             conn.execute("UPDATE groups SET name=? WHERE id=?", (new_name, int(edit_id)))
-                conn.commit(); st.success("Grupa preimenovana.")
+            conn.commit(); st.success("Grupa preimenovana.")
         if del_id:
             conn.execute("DELETE FROM groups WHERE id=?", (int(del_id),))
-                conn.commit(); st.success("Grupa obrisana.")
+            conn.commit(); st.success("Grupa obrisana.")
 
     # Popis grupa i članova
     groups = conn.execute("SELECT id, name FROM groups ORDER BY name").fetchall()
@@ -1788,7 +1534,7 @@ def section_groups():
         if st.button("Premjesti", key=f"btnmv_{gid}"):
             mid = int(sel.split(" – ")[0])
             conn.execute("UPDATE members SET group_id=? WHERE id=?", (gid, mid))
-                conn.commit(); st.success("Premješten.")
+            conn.commit(); st.success("Premješten.")
 
     # Uvoz/izvoz (Excel)
     st.markdown("---")
@@ -1807,7 +1553,7 @@ def section_groups():
                         conn.execute("INSERT INTO groups(name) VALUES (?)", (r["name"],))
                     except sqlite3.IntegrityError:
                         pass
-                conn.commit(); st.success("Grupe uvezene.")
+            conn.commit(); st.success("Grupe uvezene.")
         except Exception as e:
             st.error(f"Greška: {e}")
     conn.close()
@@ -1816,24 +1562,6 @@ def section_groups():
 # ==========================
 # ODJELJAK: VETERANI
 # ==========================
-
-# --- Export grupa (ako postoji tablica groups) ---
-try:
-    conn = get_conn()
-    if table_exists(conn, "groups"):
-        df_groups = pd.read_sql_query("SELECT * FROM groups ORDER BY name", conn)
-        with st.expander("📥 Export grupa (CSV/Excel)"):
-            st.dataframe(df_groups, use_container_width=True)
-            from io import BytesIO
-            _b = BytesIO(); df_groups.to_excel(_b, index=False); _b.seek(0)
-            st.download_button("💾 Preuzmi Excel", data=_b.getvalue(), file_name="grupe_export.xlsx", key="groups_export_xlsx")
-            st.download_button("⬇️ Preuzmi CSV", data=df_groups.to_csv(index=False).encode("utf-8"), file_name="grupe_export.csv", key="groups_export_csv")
-    else:
-        st.info("Tablica 'groups' nije pronađena.")
-    conn.close()
-except Exception as e:
-    st.info(f"Export grupa: {e}")
-
 def section_veterans():
     page_header("Veterani", "Popis, uređivanje/brisanje i komunikacija (e-mail/WhatsApp)")
 
@@ -1933,19 +1661,8 @@ def section_attendance():
         sd = c1.date_input("Od", value=date.today())
         ed = c2.date_input("Do", value=date.today() + timedelta(days=7))
         submit = st.form_submit_button("Spremi pripreme")
-
-if submit:
-        errors = []
-        if not kind: errors.append("Odaberi vrstu natjecanja.")
-        if not sel_country: errors.append("Odaberi državu.")
-        if not place: errors.append("Upiši mjesto.")
-        if date_to < date_from: errors.append("Datum 'do' ne može biti prije 'od'.")
-        if mode == "Jedan" and (not coach_text or coach_text.strip()==""): errors.append("Odaberi trenera.")
-        if mode == "Više" and (not coach_text or coach_text.strip()==""): errors.append("Odaberi barem jednog trenera.")
-        if errors:
-            for e in errors: st.error(e)
-        else:
-            conn.execute("INSERT INTO camps (title,place,coach,start_date,end_date) VALUES (?,?,?,?,?)",
+    if submit:
+        conn.execute("INSERT INTO camps (title,place,coach,start_date,end_date) VALUES (?,?,?,?,?)",
                      (title, place, coach, str(sd), str(ed)))
         conn.commit(); st.success("Pripreme spremljene.")
 
@@ -1962,7 +1679,7 @@ if submit:
                 mid = int(p.split(" – ")[0])
                 conn.execute("""INSERT INTO camp_attendance (camp_id,member_id,trainings,hours)
                                 VALUES (?,?,?,?)""", (camp_id, mid, int(tnum), float(thrs)))
-        conn.commit(); st.success("Sudjelovanje spremljeno.")
+            conn.commit(); st.success("Sudjelovanje spremljeno.")
 
 def main():
     st.set_page_config(page_title="HK Podravka – Admin", page_icon="🤼", layout="wide")
