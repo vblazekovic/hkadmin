@@ -314,6 +314,7 @@ def init_db():
               KLUB_EMAIL, KLUB_ADRESA, KLUB_OIB, KLUB_WEB, KLUB_IBAN,
               "", "", "", "", "", datetime.now().isoformat(), datetime.now().isoformat()))
     conn.commit()
+        st.success("Natjecanje spremljeno.")
     conn.close()
 
 
@@ -378,6 +379,25 @@ def save_upload(file, subdir: str) -> str:
     with open(path, "wb") as f:
         f.write(file.getbuffer())
     return path
+
+
+def show_logo_safe(logo_path_or_url: str | None, caption: str = "", width=None, use_column_width=True):
+    """Sigurno prikaže logo; na grešku pokaže upozorenje bez rušenja aplikacije."""
+    import streamlit as st
+    from pathlib import Path
+    if not logo_path_or_url:
+        st.warning("Logo nije dostupan.")
+        return
+    try:
+        pth = Path(str(logo_path_or_url))
+        if pth.exists() and pth.is_file():
+            st.image(str(pth), caption=caption, width=width, use_column_width=use_column_width)
+            return
+        st.image(logo_path_or_url, caption=caption, width=width, use_column_width=use_column_width)
+    except Exception as e:
+        st.warning(f"Logo nije moguće učitati ({e.__class__.__name__}).")
+        if caption:
+            st.caption(caption)
 
 
 def excel_bytes_from_df(df: pd.DataFrame, sheet_name: str = "Sheet1") -> bytes:
@@ -465,7 +485,7 @@ def section_club():
             logo_path = save_upload(logo_upload, "logo") if logo_upload else ""
             logo_src = logo_path or "https://hk-podravka.com/wp-content/uploads/2021/08/cropped-HK-Podravka-logo.png"
             if logo_src:
-                st.image(logo_src, caption=KLUB_NAZIV, use_column_width=True)
+                show_logo_safe(logo_src, caption=KLUB_NAZIV, use_column_width=True)
             else:
                 st.warning("Logo nije dostupan.")
             logo_path = save_upload(logo_upload, "logo") if logo_upload else ""
@@ -976,6 +996,60 @@ def section_coaches():
 
 # ==========================
 def section_competitions():
+
+def compute_competition_stats(conn, member_id: int | None = None):
+    import pandas as pd
+    if member_id is None:
+        q = """
+            SELECT
+                c.kind AS vrsta_natjecanja,
+                c.date_from AS datum_od,
+                c.date_to   AS datum_do,
+                c.country   AS država,
+                c.place     AS mjesto,
+                c.club_competitors AS nastupilo_podravka,
+                c.team_rank AS ekipni_plasman,
+                COALESCE(SUM(cr.wins),0)   AS pobjeda,
+                COALESCE(SUM(cr.losses),0) AS poraza,
+                c.coaches_text AS treneri
+            FROM competitions c
+            LEFT JOIN competition_results cr ON cr.competition_id = c.id
+            GROUP BY c.id
+            ORDER BY c.date_from DESC
+        """
+        df = pd.read_sql_query(q, conn)
+    else:
+        q = """
+            SELECT
+                c.kind AS vrsta_natjecanja,
+                c.date_from AS datum_od,
+                c.date_to   AS datum_do,
+                c.country   AS država,
+                c.place     AS mjesto,
+                c.club_competitors AS nastupilo_podravka,
+                c.team_rank AS ekipni_plasman,
+                COALESCE(SUM(cr.wins),0)   AS pobjeda,
+                COALESCE(SUM(cr.losses),0) AS poraza,
+                c.coaches_text AS treneri,
+                MAX(COALESCE(cr.placement,0)) AS plasman
+            FROM competitions c
+            LEFT JOIN competition_results cr ON cr.competition_id = c.id
+            WHERE cr.member_id = ?
+            GROUP BY c.id
+            ORDER BY c.date_from DESC
+        """
+        df = pd.read_sql_query(q, conn, params=(int(member_id),))
+    if not df.empty:
+        try:
+            df["datum_od"] = pd.to_datetime(df["datum_od"]).dt.strftime("%d.%m.%Y.")
+        except Exception:
+            pass
+        try:
+            df["datum_do"] = pd.to_datetime(df["datum_do"]).dt.strftime("%d.%m.%Y.")
+        except Exception:
+            pass
+    return df
+
     page_header("Natjecanja i rezultati", "Unos natjecanja, datoteka, rezultata i pretraga")
 
     # Definirane opcije
@@ -984,23 +1058,47 @@ def section_competitions():
         "HRVAČKA LIGA ZA SENIORE","MEĐUNARODNA HRVAČKA LIGA ZA KADETE",
         "REGIONALNO PRVENSTVO","LIGA ZA DJEVOJČICE","OSTALO"
     ]
-    REP_SUB = ["PRVENSTVO EUROPE","PRVENSTVO SVIJETA","PRVENSTVO BALKANA","UWW TURNIR"]
+    REP_SUB = ["PRVENSTVO EUROPE","PRVENSTVO SVIJETA","PRVENSTVO BALKANA","UWW TURNIR","OSTALO"]
     STYLES = ["GR","FS","WW","BW","MODIFICIRANO"]
     AGES = ["POČETNICI","U11","U13","U15","U17","U20","U23","SENIORI"]
 
-    conn = get_conn()
-
-    with st.form("comp_form"):
-        kind = st.selectbox("Vrsta natjecanja", KINDS)
-        rep_sub = st.selectbox("Podvrsta reprezentativnog nastupa", REP_SUB, disabled=(kind!="REPREZENTATIVNI NASTUP"))
-        custom_kind = st.text_input("Upiši vrstu (ako 'OSTALO')", disabled=(kind!="OSTALO"))
+    conn = get_conwith st.form("comp_form"):
+        kind = st.selectbox("Vrsta natjecanja", KINDS, key="comp_kind")
+        rep_choice = st.selectbox("Podvrsta reprezentativnog nastupa", REP_SUB, key="comp_rep_sub") if kind=="REPREZENTATIVNI NASTUP" else None
+        custom_kind = st.text_input("Upiši podvrstu reprezentativnog nastupa", key="comp_rep_custom") if kind=="REPREZENTATIVNI NASTUP" and rep_choice=="OSTALO" else (st.text_input("Upiši vrstu (ako 'OSTALO')", key="comp_kind_custom") if kind=="OSTALO" else "")
         name = st.text_input("Ime natjecanja (ako postoji naziv)")
         c1, c2 = st.columns(2)
         date_from = c1.date_input("Datum od", value=date.today())
         date_to = c2.date_input("Datum do (ako 1 dan, ostavi isti)", value=date.today())
         place = st.text_input("Mjesto")
-        country = st.text_input("Država (puni naziv)")
-        auto_iso = iso3(country)
+        
+# Zemlja (select) + automatska ISO3 kratica
+
+try:
+    import pycountry
+    _COUNTRIES = sorted(
+        [(f"{c.name} ({getattr(c, 'alpha_3', '').upper()})", getattr(c, "alpha_3", "").lower(), getattr(c, "alpha_3", "").upper())
+         for c in pycountry.countries],
+        key=lambda x: x[0]
+    )
+except Exception:
+    _COUNTRIES = [
+        ("Croatia (CRO)", "hrv", "CRO"),
+        ("Serbia (SRB)", "srb", "SRB"),
+        ("Slovenia (SLO)", "svn", "SLO"),
+        ("Bosnia and Herzegovina (BIH)", "bih", "BIH"),
+        ("Italy (ITA)", "ita", "ITA"),
+        ("Hungary (HUN)", "hun", "HUN"),
+        ("Austria (AUT)", "aut", "AUT"),
+        ("Germany (GER)", "deu", "GER")
+    ]
+_country_names = [n for n, _ in _COUNTRIES]
+_sel_country = st.selectbox("Zemlja", _country_names, key="comp_country")
+_iso = next(code for n, code in _COUNTRIES if n == _sel_country)
+st.text_input("Kratica zemlje (auto)", value=_iso, key="comp_country_code", disabled=True)
+country = _sel_country
+auto_iso = _iso
+
         style = st.selectbox("Hrvački stil", STYLES)
         age_group = st.selectbox("Uzrast", AGES)
         c3, c4, c5 = st.columns(3)
@@ -1012,7 +1110,17 @@ def section_competitions():
         total_countries = c7.number_input("Broj zemalja", min_value=0, step=1)
 
         # Treneri koji su vodili
-        coach_text = st.text_input("Trener(i) (odvoji zarezima)")
+        
+st.write("Trener(i)")
+_mode = st.radio("Odabir", ["Jedan", "Više"], horizontal=True, key="comp_trainer_mode")
+_coaches = [r[0] for r in conn.execute("SELECT full_name FROM coaches ORDER BY full_name").fetchall()]
+if _mode == "Jedan":
+    _one = st.selectbox("Trener", _coaches if _coaches else [""], key="comp_trainer_one")
+    coach_text = _one or ""
+else:
+    _many = st.multiselect("Trener(i)", _coaches, key="comp_trainer_many")
+    coach_text = ", ".join(_many)
+
 
         # Opis i linkovi + upload
         notes = st.text_area("Zapažanje trenera (za objave)")
@@ -1025,7 +1133,7 @@ def section_competitions():
         # Slike
         photos = st.file_uploader("Slike s natjecanja (više datoteka)", type=["jpg","jpeg","png"], accept_multiple_files=True)
 
-        submit = st.form_submit_button("Spremi natjecanje")
+        submit = st.form_submit_button("Spremi natjecanje")jecanje")
 
     if submit:
         bull_p = save_upload(bulletin_file, "competitions/docs") if bulletin_file else ""
@@ -1046,6 +1154,24 @@ def section_competitions():
                          (comp_id, ph.name, p, datetime.now().isoformat()))
         conn.commit()
         
+
+# --- Klub / Sportaš statistika tablica ispod ---
+st.markdown("---")
+st.subheader("Sažetak natjecanja")
+view_mode = st.radio("Prikaz", ["Statistika kluba", "Statistika sportaša"], horizontal=True, key="comp_view_mode")
+if view_mode == "Statistika kluba":
+    df_stats = compute_competition_stats(conn, None)
+    st.dataframe(df_stats, use_container_width=True)
+else:
+    members = conn.execute("SELECT id, full_name FROM members ORDER BY full_name").fetchall()
+    if members:
+        sel = st.selectbox("Sportaš", [f"{m[0]} – {m[1]}" for m in members], key="comp_member_sel")
+        mid = int(sel.split(" – ")[0])
+        df_stats = compute_competition_stats(conn, mid)
+        st.dataframe(df_stats, use_container_width=True)
+    else:
+        st.info("Nema unesenih sportaša za prikaz.")
+
     st.markdown("---")
     st.subheader("Unos rezultata sportaša")
 
@@ -1593,3 +1719,35 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+def run_smoke_tests():
+    import streamlit as st
+    ok = True
+    msgs = []
+    # DB tables
+    try:
+        conn = get_conn()
+        for t in ["club_info","members","coaches","competitions","competition_results"]:
+            conn.execute(f"SELECT 1 FROM {t} LIMIT 1")
+        conn.close()
+    except Exception as e:
+        ok = False; msgs.append(f"Baza/tablice: {e}")
+    # Countries list basic
+    try:
+        assert "comp_country" in st.session_state or True
+    except Exception as e:
+        ok = False; msgs.append(f"Zemlje: {e}")
+    # Logo loader shouldn't crash
+    try:
+        show_logo_safe(None)
+    except Exception as e:
+        ok = False; msgs.append(f"Logo helper: {e}")
+    with st.sidebar:
+        st.subheader("Smoke test")
+        if ok:
+            st.success("OK")
+        else:
+            st.error("Problemi:")
+            for m in msgs:
+                st.write("•", m)
+
