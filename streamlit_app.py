@@ -268,7 +268,7 @@ def init_db():
         )
     """)
 
-    
+
     ensure_column("competition_results","age_group","TEXT")
 # Prisustvo: treneri (sesije) i članovi (dolazak)
     cur.execute("""
@@ -1159,7 +1159,7 @@ def section_competitions():
 
         submit = st.form_submit_button("Spremi natjecanje")
 
-    
+
 if submit:
         errors = []
         if not kind: errors.append("Odaberi vrstu natjecanja.")
@@ -1287,7 +1287,7 @@ def compute_competition_stats(conn, member_id: int | None = None):
         date_from = c1.date_input("Datum od", value=date.today())
         date_to = c2.date_input("Datum do (ako 1 dan, ostavi isti)", value=date.today())
         place = st.text_input("Mjesto")
-        
+
 # Zemlja (select) + automatska ISO3 kratica
 
 try:
@@ -1326,7 +1326,7 @@ auto_iso = _iso
         total_countries = c7.number_input("Broj zemalja", min_value=0, step=1)
 
         # Treneri koji su vodili
-        
+
 st.write("Trener(i)")
 _mode = st.radio("Odabir", ["Jedan", "Više"], horizontal=True, key="comp_trainer_mode")
 _coaches = [r[0] for r in conn.execute("SELECT full_name FROM coaches ORDER BY full_name").fetchall()]
@@ -1369,7 +1369,7 @@ else:
             conn.execute("INSERT INTO competition_photos (competition_id,filename,path,uploaded_at) VALUES (?,?,?,?)",
                          (comp_id, ph.name, p, datetime.now().isoformat()))
         conn.commit()
-        
+
 
 # --- Klub / Sportaš statistika tablica ispod ---
 st.markdown("---")
@@ -1535,7 +1535,7 @@ else:
         except Exception as e:
             st.error(f"Greška pri uvozu: {e}")
     # Export svih rezultata
-    
+
     res_all = pd.read_sql_query("""        SELECT cr.id, c.name AS natjecanje, c.date_from AS datum, m.full_name AS sportaš,
                cr.weight_category AS kategorija, cr.style AS stil,
                cr.bouts_total AS borbi, cr.wins AS pobjede, cr.losses AS porazi, cr.placement AS plasman
@@ -1933,7 +1933,7 @@ def section_attendance():
         sd = c1.date_input("Od", value=date.today())
         ed = c2.date_input("Do", value=date.today() + timedelta(days=7))
         submit = st.form_submit_button("Spremi pripreme")
-    
+
 if submit:
         errors = []
         if not kind: errors.append("Odaberi vrstu natjecanja.")
