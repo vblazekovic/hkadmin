@@ -1133,7 +1133,7 @@ else:
         # Slike
         photos = st.file_uploader("Slike s natjecanja (više datoteka)", type=["jpg","jpeg","png"], accept_multiple_files=True)
 
-        submit = st.form_submit_button("Spremi natjecanje")jecanje")
+        submit = st.form_submit_button("Spremi natjecanje")
 
     if submit:
         bull_p = save_upload(bulletin_file, "competitions/docs") if bulletin_file else ""
