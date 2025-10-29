@@ -1236,17 +1236,16 @@ def section_coaches():
 # ==========================
 
 def section_competitions():
-    conn = get_conn()
     # Pretraga i pregled natjecanja
         st.markdown("---")
-    st.subheader("Pregled i pretraga natjecanja")
-    colf = st.columns(5)
-    f_kind = colf[0].text_input("Vrsta (dio naziva)")
-    f_year = colf[1].text_input("Godina (npr. 2025)", key="comp_year")
-    f_age  = colf[2].text_input("Uzrast (dio naziva)")
-    f_style= colf[3].text_input("Stil (GR/FS/WW/BW/MOD)")
-    f_country = colf[4].text_input("Država (dio naziva)")
-    if st.button("Pretraži"):
+        st.subheader("Pregled i pretraga natjecanja")
+        colf = st.columns(5)
+        f_kind = colf[0].text_input("Vrsta (dio naziva)")
+        f_year = colf[1].text_input("Godina (npr. 2025)", key="comp_year")
+        f_age  = colf[2].text_input("Uzrast (dio naziva)")
+        f_style= colf[3].text_input("Stil (GR/FS/WW/BW/MOD)")
+        f_country = colf[4].text_input("Država (dio naziva)")
+        if st.button("Pretraži"):
             q = """
                 SELECT id, name AS ime, kind AS vrsta, age_group AS uzrast, style AS stil,
                        date_from AS od, date_to AS do, place AS mjesto, country AS država, country_code AS ISO3,
@@ -1291,7 +1290,6 @@ def section_competitions():
     # ==========================
 
     # ODJELJAK: STATISTIKA
-    conn.close()
     # ==========================
 def section_stats():
     page_header("Statistika", "Filtri i grafički/tablični prikaz medalja, pobjeda/poraza i borbi")
