@@ -975,7 +975,7 @@ def section_coaches():
 
 
 # ==========================
-# Odef section_competitions():
+def section_competitions():
     page_header("Natjecanja i rezultati", "Unos natjecanja, datoteka, rezultata i pretraga")
 
     # Definirane opcije
@@ -1235,13 +1235,13 @@ def section_coaches():
 # NAVIGACIJA I APLIKACIJA
 # ==========================
 
-def section_competitions():
+def section_competitions_search_removed():
     # Pretraga i pregled natjecanja
         st.markdown("---")
         st.subheader("Pregled i pretraga natjecanja")
         colf = st.columns(5)
         f_kind = colf[0].text_input("Vrsta (dio naziva)")
-        f_year = colf[1].text_input("Godina (npr. 2025)", key="comp_year")
+        f_year = colf[1].text_input("Godina (npr. 2025)", key="comp_year2")
         f_age  = colf[2].text_input("Uzrast (dio naziva)")
         f_style= colf[3].text_input("Stil (GR/FS/WW/BW/MOD)")
         f_country = colf[4].text_input("Država (dio naziva)")
