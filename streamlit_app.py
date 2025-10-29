@@ -330,7 +330,7 @@ def init_db():
               KLUB_EMAIL, KLUB_ADRESA, KLUB_OIB, KLUB_WEB, KLUB_IBAN,
               "", "", "", "", "", datetime.now().isoformat(), datetime.now().isoformat()))
     conn.commit()
-            st.success("Natjecanje spremljeno.")
+    st.success("Natjecanje spremljeno.")
     conn.close()
 
 
@@ -850,7 +850,7 @@ def section_members():
                     style = "color:#b00020; font-weight:600;"
                 med2.markdown(f"<div style='{style}'>Preostalo: {days_left} dana</div>", unsafe_allow_html=True)
 
-            if st.form_submit_button("Spremi izmjene"):
+            if st.form_submit_button("Spremi izmjene")
                 full_name = f"{data['first_name']} {data['last_name']}".strip() or data.get("full_name","")
                 data["full_name"] = full_name
                 gid = None
@@ -1175,7 +1175,7 @@ if submit:
             "INSERT INTO competitions (name,kind,subtype,date_from,date_to,country,iso_code,ioc_code,place,style,age_group,club_competitors,team_rank,wins,losses,coaches_text) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (name, kind, subtype, str(date_from), str(date_to), sel_country, iso_code, ioc_code, place, style, age_group, int(club_competitors), team_rank, int(wins), int(losses), coach_text)
         )
-        conn.commit()
+            conn.commit()
             st.success("Natjecanje spremljeno.")
 
     # --- Sažetak ---
@@ -1349,7 +1349,7 @@ else:
         # Slike
         photos = st.file_uploader("Slike s natjecanja (više datoteka)", type=["jpg","jpeg","png"], accept_multiple_files=True)
 
-        submit = st.form_submit_button("Spremi natjecanje")jecanje")
+        submit = st.form_submit_button("Spremi natjecanje")
 
     if submit:
         bull_p = save_upload(bulletin_file, "competitions/docs") if bulletin_file else ""
@@ -1768,10 +1768,10 @@ def section_groups():
                 st.warning("Grupa već postoji.")
         if edit_id and new_name:
             conn.execute("UPDATE groups SET name=? WHERE id=?", (new_name, int(edit_id)))
-            conn.commit(); st.success("Grupa preimenovana.")
+                conn.commit(); st.success("Grupa preimenovana.")
         if del_id:
             conn.execute("DELETE FROM groups WHERE id=?", (int(del_id),))
-            conn.commit(); st.success("Grupa obrisana.")
+                conn.commit(); st.success("Grupa obrisana.")
 
     # Popis grupa i članova
     groups = conn.execute("SELECT id, name FROM groups ORDER BY name").fetchall()
@@ -1788,7 +1788,7 @@ def section_groups():
         if st.button("Premjesti", key=f"btnmv_{gid}"):
             mid = int(sel.split(" – ")[0])
             conn.execute("UPDATE members SET group_id=? WHERE id=?", (gid, mid))
-            conn.commit(); st.success("Premješten.")
+                conn.commit(); st.success("Premješten.")
 
     # Uvoz/izvoz (Excel)
     st.markdown("---")
@@ -1807,7 +1807,7 @@ def section_groups():
                         conn.execute("INSERT INTO groups(name) VALUES (?)", (r["name"],))
                     except sqlite3.IntegrityError:
                         pass
-            conn.commit(); st.success("Grupe uvezene.")
+                conn.commit(); st.success("Grupe uvezene.")
         except Exception as e:
             st.error(f"Greška: {e}")
     conn.close()
@@ -1962,7 +1962,7 @@ if submit:
                 mid = int(p.split(" – ")[0])
                 conn.execute("""INSERT INTO camp_attendance (camp_id,member_id,trainings,hours)
                                 VALUES (?,?,?,?)""", (camp_id, mid, int(tnum), float(thrs)))
-            conn.commit(); st.success("Sudjelovanje spremljeno.")
+        conn.commit(); st.success("Sudjelovanje spremljeno.")
 
 def main():
     st.set_page_config(page_title="HK Podravka – Admin", page_icon="🤼", layout="wide")
