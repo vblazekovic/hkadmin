@@ -314,7 +314,6 @@ def init_db():
               KLUB_EMAIL, KLUB_ADRESA, KLUB_OIB, KLUB_WEB, KLUB_IBAN,
               "", "", "", "", "", datetime.now().isoformat(), datetime.now().isoformat()))
     conn.commit()
-        st.success("Natjecanje spremljeno.")
     conn.close()
 
 
@@ -996,60 +995,6 @@ def section_coaches():
 
 # ==========================
 def section_competitions():
-
-def compute_competition_stats(conn, member_id: int | None = None):
-    import pandas as pd
-    if member_id is None:
-        q = """
-            SELECT
-                c.kind AS vrsta_natjecanja,
-                c.date_from AS datum_od,
-                c.date_to   AS datum_do,
-                c.country   AS država,
-                c.place     AS mjesto,
-                c.club_competitors AS nastupilo_podravka,
-                c.team_rank AS ekipni_plasman,
-                COALESCE(SUM(cr.wins),0)   AS pobjeda,
-                COALESCE(SUM(cr.losses),0) AS poraza,
-                c.coaches_text AS treneri
-            FROM competitions c
-            LEFT JOIN competition_results cr ON cr.competition_id = c.id
-            GROUP BY c.id
-            ORDER BY c.date_from DESC
-        """
-        df = pd.read_sql_query(q, conn)
-    else:
-        q = """
-            SELECT
-                c.kind AS vrsta_natjecanja,
-                c.date_from AS datum_od,
-                c.date_to   AS datum_do,
-                c.country   AS država,
-                c.place     AS mjesto,
-                c.club_competitors AS nastupilo_podravka,
-                c.team_rank AS ekipni_plasman,
-                COALESCE(SUM(cr.wins),0)   AS pobjeda,
-                COALESCE(SUM(cr.losses),0) AS poraza,
-                c.coaches_text AS treneri,
-                MAX(COALESCE(cr.placement,0)) AS plasman
-            FROM competitions c
-            LEFT JOIN competition_results cr ON cr.competition_id = c.id
-            WHERE cr.member_id = ?
-            GROUP BY c.id
-            ORDER BY c.date_from DESC
-        """
-        df = pd.read_sql_query(q, conn, params=(int(member_id),))
-    if not df.empty:
-        try:
-            df["datum_od"] = pd.to_datetime(df["datum_od"]).dt.strftime("%d.%m.%Y.")
-        except Exception:
-            pass
-        try:
-            df["datum_do"] = pd.to_datetime(df["datum_do"]).dt.strftime("%d.%m.%Y.")
-        except Exception:
-            pass
-    return df
-
     page_header("Natjecanja i rezultati", "Unos natjecanja, datoteka, rezultata i pretraga")
 
     # Definirane opcije
@@ -1058,14 +1003,16 @@ def compute_competition_stats(conn, member_id: int | None = None):
         "HRVAČKA LIGA ZA SENIORE","MEĐUNARODNA HRVAČKA LIGA ZA KADETE",
         "REGIONALNO PRVENSTVO","LIGA ZA DJEVOJČICE","OSTALO"
     ]
-    REP_SUB = ["PRVENSTVO EUROPE","PRVENSTVO SVIJETA","PRVENSTVO BALKANA","UWW TURNIR","OSTALO"]
+    REP_SUB = ["PRVENSTVO EUROPE","PRVENSTVO SVIJETA","PRVENSTVO BALKANA","UWW TURNIR"]
     STYLES = ["GR","FS","WW","BW","MODIFICIRANO"]
     AGES = ["POČETNICI","U11","U13","U15","U17","U20","U23","SENIORI"]
 
-    conn = get_conwith st.form("comp_form"):
-        kind = st.selectbox("Vrsta natjecanja", KINDS, key="comp_kind")
-        rep_choice = st.selectbox("Podvrsta reprezentativnog nastupa", REP_SUB, key="comp_rep_sub") if kind=="REPREZENTATIVNI NASTUP" else None
-        custom_kind = st.text_input("Upiši podvrstu reprezentativnog nastupa", key="comp_rep_custom") if kind=="REPREZENTATIVNI NASTUP" and rep_choice=="OSTALO" else (st.text_input("Upiši vrstu (ako 'OSTALO')", key="comp_kind_custom") if kind=="OSTALO" else "")
+    conn = get_conn()
+
+    with st.form("comp_form"):
+        kind = st.selectbox("Vrsta natjecanja", KINDS)
+        rep_sub = st.selectbox("Podvrsta reprezentativnog nastupa", REP_SUB, disabled=(kind!="REPREZENTATIVNI NASTUP"))
+        custom_kind = st.text_input("Upiši vrstu (ako 'OSTALO')", disabled=(kind!="OSTALO"))
         name = st.text_input("Ime natjecanja (ako postoji naziv)")
         c1, c2 = st.columns(2)
         date_from = c1.date_input("Datum od", value=date.today())
@@ -1073,24 +1020,16 @@ def compute_competition_stats(conn, member_id: int | None = None):
         place = st.text_input("Mjesto")
         
 # Zemlja (select) + automatska ISO3 kratica
-
 try:
     import pycountry
-    _COUNTRIES = sorted(
-        [(f"{c.name} ({getattr(c, 'alpha_3', '').upper()})", getattr(c, "alpha_3", "").lower(), getattr(c, "alpha_3", "").upper())
-         for c in pycountry.countries],
-        key=lambda x: x[0]
-    )
+    _COUNTRIES = sorted([(c.name, getattr(c, "alpha_3", "").lower()) for c in pycountry.countries], key=lambda x: x[0])
 except Exception:
     _COUNTRIES = [
-        ("Croatia (CRO)", "hrv", "CRO"),
-        ("Serbia (SRB)", "srb", "SRB"),
-        ("Slovenia (SLO)", "svn", "SLO"),
-        ("Bosnia and Herzegovina (BIH)", "bih", "BIH"),
-        ("Italy (ITA)", "ita", "ITA"),
-        ("Hungary (HUN)", "hun", "HUN"),
-        ("Austria (AUT)", "aut", "AUT"),
-        ("Germany (GER)", "deu", "GER")
+        ("Croatia", "hrv"), ("Serbia", "srb"), ("Slovenia", "svn"), ("Bosnia and Herzegovina", "bih"),
+        ("Montenegro", "mne"), ("North Macedonia", "mkd"), ("Hungary", "hun"), ("Austria", "aut"),
+        ("Italy", "ita"), ("Germany", "deu"), ("France", "fra"), ("Spain", "esp"),
+        ("Romania", "rou"), ("Bulgaria", "bgr"), ("Greece", "grc"), ("Turkey", "tur"),
+        ("Switzerland", "che"), ("Poland", "pol"), ("Czechia", "cze"), ("Slovakia", "svk")
     ]
 _country_names = [n for n, _ in _COUNTRIES]
 _sel_country = st.selectbox("Zemlja", _country_names, key="comp_country")
@@ -1133,7 +1072,7 @@ else:
         # Slike
         photos = st.file_uploader("Slike s natjecanja (više datoteka)", type=["jpg","jpeg","png"], accept_multiple_files=True)
 
-        submit = st.form_submit_button("Spremi natjecanje")jecanje")
+        submit = st.form_submit_button("Spremi natjecanje")
 
     if submit:
         bull_p = save_upload(bulletin_file, "competitions/docs") if bulletin_file else ""
@@ -1154,24 +1093,6 @@ else:
                          (comp_id, ph.name, p, datetime.now().isoformat()))
         conn.commit()
         
-
-# --- Klub / Sportaš statistika tablica ispod ---
-st.markdown("---")
-st.subheader("Sažetak natjecanja")
-view_mode = st.radio("Prikaz", ["Statistika kluba", "Statistika sportaša"], horizontal=True, key="comp_view_mode")
-if view_mode == "Statistika kluba":
-    df_stats = compute_competition_stats(conn, None)
-    st.dataframe(df_stats, use_container_width=True)
-else:
-    members = conn.execute("SELECT id, full_name FROM members ORDER BY full_name").fetchall()
-    if members:
-        sel = st.selectbox("Sportaš", [f"{m[0]} – {m[1]}" for m in members], key="comp_member_sel")
-        mid = int(sel.split(" – ")[0])
-        df_stats = compute_competition_stats(conn, mid)
-        st.dataframe(df_stats, use_container_width=True)
-    else:
-        st.info("Nema unesenih sportaša za prikaz.")
-
     st.markdown("---")
     st.subheader("Unos rezultata sportaša")
 
