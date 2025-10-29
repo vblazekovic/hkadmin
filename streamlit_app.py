@@ -380,25 +380,6 @@ def save_upload(file, subdir: str) -> str:
     return path
 
 
-def show_logo_safe(logo_path_or_url: str | None, caption: str = "", width=None, use_column_width=True):
-    """Sigurno prikaže logo; na grešku pokaže upozorenje bez rušenja aplikacije."""
-    import streamlit as st
-    from pathlib import Path
-    if not logo_path_or_url:
-        st.warning("Logo nije dostupan.")
-        return
-    try:
-        pth = Path(str(logo_path_or_url))
-        if pth.exists() and pth.is_file():
-            st.image(str(pth), caption=caption, width=width, use_column_width=use_column_width)
-            return
-        st.image(logo_path_or_url, caption=caption, width=width, use_column_width=use_column_width)
-    except Exception as e:
-        st.warning(f"Logo nije moguće učitati ({e.__class__.__name__}).")
-        if caption:
-            st.caption(caption)
-
-
 def excel_bytes_from_df(df: pd.DataFrame, sheet_name: str = "Sheet1") -> bytes:
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
@@ -484,7 +465,7 @@ def section_club():
             logo_path = save_upload(logo_upload, "logo") if logo_upload else ""
             logo_src = logo_path or "https://hk-podravka.com/wp-content/uploads/2021/08/cropped-HK-Podravka-logo.png"
             if logo_src:
-                show_logo_safe(logo_src, caption=KLUB_NAZIV, use_column_width=True)
+                st.image(logo_src, caption=KLUB_NAZIV, use_column_width=True)
             else:
                 st.warning("Logo nije dostupan.")
             logo_path = save_upload(logo_upload, "logo") if logo_upload else ""
@@ -1018,26 +999,8 @@ def section_competitions():
         date_from = c1.date_input("Datum od", value=date.today())
         date_to = c2.date_input("Datum do (ako 1 dan, ostavi isti)", value=date.today())
         place = st.text_input("Mjesto")
-        
-# Zemlja (select) + automatska ISO3 kratica
-try:
-    import pycountry
-    _COUNTRIES = sorted([(c.name, getattr(c, "alpha_3", "").lower()) for c in pycountry.countries], key=lambda x: x[0])
-except Exception:
-    _COUNTRIES = [
-        ("Croatia", "hrv"), ("Serbia", "srb"), ("Slovenia", "svn"), ("Bosnia and Herzegovina", "bih"),
-        ("Montenegro", "mne"), ("North Macedonia", "mkd"), ("Hungary", "hun"), ("Austria", "aut"),
-        ("Italy", "ita"), ("Germany", "deu"), ("France", "fra"), ("Spain", "esp"),
-        ("Romania", "rou"), ("Bulgaria", "bgr"), ("Greece", "grc"), ("Turkey", "tur"),
-        ("Switzerland", "che"), ("Poland", "pol"), ("Czechia", "cze"), ("Slovakia", "svk")
-    ]
-_country_names = [n for n, _ in _COUNTRIES]
-_sel_country = st.selectbox("Zemlja", _country_names, key="comp_country")
-_iso = next(code for n, code in _COUNTRIES if n == _sel_country)
-st.text_input("Kratica zemlje (auto)", value=_iso, key="comp_country_code", disabled=True)
-country = _sel_country
-auto_iso = _iso
-
+        country = st.text_input("Država (puni naziv)")
+        auto_iso = iso3(country)
         style = st.selectbox("Hrvački stil", STYLES)
         age_group = st.selectbox("Uzrast", AGES)
         c3, c4, c5 = st.columns(3)
@@ -1049,17 +1012,7 @@ auto_iso = _iso
         total_countries = c7.number_input("Broj zemalja", min_value=0, step=1)
 
         # Treneri koji su vodili
-        
-st.write("Trener(i)")
-_mode = st.radio("Odabir", ["Jedan", "Više"], horizontal=True, key="comp_trainer_mode")
-_coaches = [r[0] for r in conn.execute("SELECT full_name FROM coaches ORDER BY full_name").fetchall()]
-if _mode == "Jedan":
-    _one = st.selectbox("Trener", _coaches if _coaches else [""], key="comp_trainer_one")
-    coach_text = _one or ""
-else:
-    _many = st.multiselect("Trener(i)", _coaches, key="comp_trainer_many")
-    coach_text = ", ".join(_many)
-
+        coach_text = st.text_input("Trener(i) (odvoji zarezima)")
 
         # Opis i linkovi + upload
         notes = st.text_area("Zapažanje trenera (za objave)")
@@ -1640,35 +1593,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-def run_smoke_tests():
-    import streamlit as st
-    ok = True
-    msgs = []
-    # DB tables
-    try:
-        conn = get_conn()
-        for t in ["club_info","members","coaches","competitions","competition_results"]:
-            conn.execute(f"SELECT 1 FROM {t} LIMIT 1")
-        conn.close()
-    except Exception as e:
-        ok = False; msgs.append(f"Baza/tablice: {e}")
-    # Countries list basic
-    try:
-        assert "comp_country" in st.session_state or True
-    except Exception as e:
-        ok = False; msgs.append(f"Zemlje: {e}")
-    # Logo loader shouldn't crash
-    try:
-        show_logo_safe(None)
-    except Exception as e:
-        ok = False; msgs.append(f"Logo helper: {e}")
-    with st.sidebar:
-        st.subheader("Smoke test")
-        if ok:
-            st.success("OK")
-        else:
-            st.error("Problemi:")
-            for m in msgs:
-                st.write("•", m)
-
